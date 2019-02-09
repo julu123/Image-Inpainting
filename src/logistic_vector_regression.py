@@ -30,23 +30,25 @@ import tensorflow as tf
 #   return cost
 
 
-def Multivariate_log_regression(X,Y,learning_rate:float=0.05,training_epochs:int=2500):#,batch_size:int=100,display_step:int=1):
-    x_n=len(X)
-    y_n=len(Y)
+def Multivariate_log_regression(X, Y, learning_rate:float=0.05, training_epochs:int=100):#,batch_size:int=100,display_step:int=1):
+
+    x_n = X.shape[0]
+    y_n = Y.shape[0]
 
     #Define varibles
-    x = tf.placeholder(tf.float32, [None, x_n])
-    y = tf.placeholder(tf.float32, [None, y_n])
+    x = tf.placeholder(tf.float32, [x_n, None])
+    y = tf.placeholder(tf.float32, [y_n, None])
 
     #Define weights
-    W = tf.Variable(tf.zeros([x_n, y_n]))
-    b = tf.Variable(tf.zeros([y_n]))
+    W = tf.Variable(tf.zeros([y_n, x_n]))
+    b = tf.Variable(tf.zeros([y_n, 1]))
 
     #Define yhat
-    yhat = tf.nn.sigmoid(tf.add(tf.matmul(W,x),b))
+    z = tf.add(tf.matmul(W, x), b)
+    y_hat = tf.nn.sigmoid(z)
 
     #Define cost
-    cost = tf.norm(y-yhat)
+    cost = tf.norm(y-y_hat)
 
     #Gradient Decent
     optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost)
@@ -58,5 +60,7 @@ def Multivariate_log_regression(X,Y,learning_rate:float=0.05,training_epochs:int
 
         #Train
         for epoch in range(training_epochs):
-            _, c = sess.run([optimizer, cost], feed_dict={x: x, y: y})
+            _, c = sess.run([optimizer, cost], feed_dict={x: X, y: Y})
+            print("Epoch:", '%04d' % (epoch + 1), "cost=", "{:.9f}".format(c))
 
+        return sess.run(y_hat, feed_dict={x: X, y: Y})[:, 0]
