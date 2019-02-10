@@ -62,6 +62,23 @@ class HolePuncher:
 
         return x, y
 
+    def split_batch(self, images):
+
+        m = len(images)
+        x_n = np.sum(self._flat_inv_mask)
+        y_n = np.sum(self._flat_mask)
+
+        X = np.zeros((x_n, m))
+        Y = np.zeros((y_n, m))
+
+        for i, img in enumerate(images):
+            x, y = self.split(img)
+            X[:, i] = x
+            Y[:, i] = y
+
+        return X, Y
+
+
     def merge(self, x, y):
         """
         Reverse operation to 'split' method.

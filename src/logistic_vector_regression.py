@@ -1,66 +1,57 @@
-import numpy as np
-from PIL import Image, ImageFilter
 import tensorflow as tf
 
-#path = '/Users/justinlundgren/desktop/Image0.jpg'
-#im = Image.open(path)
-#im.show()
 
-#def Initlialize(x,y):
-#    n_x = len(x)
-#    n_y = len(y)
-#   W1 = np.random.rand(n_y,n_x)*0.01
-#    b1 = np.zeros((n_y,1))
-#    return W1,b1
+class LogisticVectorRegression:
 
-#def Activate(W1,b1,x):
-#   yhat = tf.sigmoid(tf.add(tf.matmul(W1,x),b1))
-#   sess = tf.Session()
-#   result = sess.run(yhat)
-#   sess.close()
-#   return result
+    _session = None
 
-#def cost(y,yhat):
-#   real = tf.placeholder(tf.float32, name="real")
-#   pred = tf.placeholder(tf.float32, name="pred")
-#   cost = tf.norm(y-yhat)
-#   sess = tf.Session()
-#   cost = sess.run(cost, feed_dict={y: real, yhat: pred})
-#   sess.close()
-#   return cost
+    def __enter__(self):
+        self._session = tf.Session()
+        return self
 
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self._session.close()
 
-def Multivariate_log_regression(X, Y, learning_rate:float=0.05, training_epochs:int=100):#,batch_size:int=100,display_step:int=1):
+    _y_hat = None
+    _x = None
 
-    x_n = X.shape[0]
-    y_n = Y.shape[0]
+    def fit(self,
+            X, Y,
+            learning_rate:float=0.05,
+            training_epochs:int=250):
 
-    #Define varibles
-    x = tf.placeholder(tf.float32, [x_n, None])
-    y = tf.placeholder(tf.float32, [y_n, None])
+        x_n = X.shape[0]
+        y_n = Y.shape[0]
 
-    #Define weights
-    W = tf.Variable(tf.zeros([y_n, x_n]))
-    b = tf.Variable(tf.zeros([y_n, 1]))
+        # define variables
+        self._x = x = tf.placeholder(tf.float32, [x_n, None])
+        y = tf.placeholder(tf.float32, [y_n, None])
 
-    #Define yhat
-    z = tf.add(tf.matmul(W, x), b)
-    y_hat = tf.nn.sigmoid(z)
+        # define weights
+        W = tf.Variable(tf.zeros([y_n, x_n]))
+        b = tf.Variable(tf.zeros([y_n, 1]))
 
-    #Define cost
-    cost = tf.norm(y-y_hat)
+        # define y_hat
+        z = tf.add(tf.matmul(W, x), b)
+        y_hat = tf.nn.sigmoid(z)
+        self._y_hat = y_hat
 
-    #Gradient Decent
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost)
+        # define cost
+        cost = tf.norm(y - y_hat)
 
-    init = tf.global_variables_initializer()
+        # gradient descent
+        optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost)
 
-    with tf.Session() as sess:
-        sess.run(init)
+        init = tf.global_variables_initializer()
 
-        #Train
+        self._session.run(init)
+
+        # train
         for epoch in range(training_epochs):
-            _, c = sess.run([optimizer, cost], feed_dict={x: X, y: Y})
-            print("Epoch:", '%04d' % (epoch + 1), "cost=", "{:.9f}".format(c))
+            _, c = self._session.run([optimizer, cost], feed_dict={x: X, y: Y})
+            print("Epoch:", '%04d' % (epoch + 1), "cost =", "{:.4f}".format(c))
 
-        return sess.run(y_hat, feed_dict={x: X, y: Y})[:, 0]
+    def predict(self, X):
+        return self._session.run(self._y_hat, feed_dict={self._x: X})
+
+
