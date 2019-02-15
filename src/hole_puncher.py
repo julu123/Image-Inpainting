@@ -35,15 +35,32 @@ class HolePuncher:
 
     def fill(self, img):
         """
-        Fills the hole with the mean pixel value
+        Fills the hole with the image-wide mean
 
-        :param img: numpy array of same shape as the HolePuncher was initialized
+        :param img: numpy array of same shape as the HolePuncher
+        was initialized. Must be mutable.
         """
 
         assert img.shape == self._mask.shape
+        assert len(img.shape) == 3
 
-        mean = np.mean(img)
-        img[self._mask] = mean
+        mask = self._mask.max(axis=2)
+
+        mean = np.mean(img, axis=(0, 1), keepdims=True)
+        img[mask] = mean
+
+    def fill_batch(self, images):
+
+        m = len(images)
+        n = np.size(self._mask)
+
+        X = np.zeros((n, m))
+
+        for i, img in enumerate(images):
+            self.fill(img)
+            X[:, i] = img.flatten()
+
+        return X
 
     def split(self, img):
         """
@@ -78,7 +95,6 @@ class HolePuncher:
 
         return X, Y
 
-
     def merge(self, x, y):
         """
         Reverse operation to 'split' method.
@@ -91,6 +107,25 @@ class HolePuncher:
 
         img = np.zeros(self._flat_mask.shape, dtype=x.dtype)
         img[self._flat_inv_mask] = x
+        img[self._flat_mask] = y
+
+        img = img.reshape(self._mask.shape)
+
+        return img
+
+    def blend(self, x, y):
+        """
+        Blends two flattened arrays: one only with hole pixels and one with
+        pixels of a full image
+
+        :returns numpy array of same shape as the HolePuncher was initialized
+        """
+
+        assert np.ndim(x) == 1 and np.ndim(y) == 1
+        assert np.size(x) == np.size(self._mask)
+        assert np.size(y) == np.sum(self._flat_mask)
+
+        img = np.copy(x)
         img[self._flat_mask] = y
 
         img = img.reshape(self._mask.shape)
