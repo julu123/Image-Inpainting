@@ -9,17 +9,18 @@ from logistic_vector_regression import LogisticVectorRegression
 
 
 def load_image(number):
-    img_dir = '../data/64x64'
+    img_dir = '../data/32x32'
     path = os.path.join(img_dir, f"{number:05d}.png")
     return np.array(ndimage.imread(path, flatten=False)) / 255.0
 
 
-TRAIN_SIZE = 1
+BATCH_SIZE = 500
+BATCHES = 20
 TEST_SIZE = 5
-IMG_SHAPE = (64, 64, 3)
+IMG_SHAPE = (32, 32, 3)
 
 images = []
-for i in range(TRAIN_SIZE):
+for i in range(BATCHES*BATCH_SIZE):
     images.append(load_image(i+1))
 
 
@@ -31,12 +32,12 @@ with ConvNet() as conv:
     conv.fit(X_train, Y_train,
              width=IMG_SHAPE[0],
              height=IMG_SHAPE[1],
-             training_epochs=200,
+             batch_size=BATCH_SIZE,
+             training_epochs=300,
              learning_rate=0.0001)
 
     test_images = []
-    # for i in range(TRAIN_SIZE, TRAIN_SIZE + TEST_SIZE):
-    for i in range(TRAIN_SIZE):
+    for i in range(BATCHES*BATCH_SIZE, BATCHES*BATCH_SIZE + TEST_SIZE):
         test_images.append(load_image(i + 1))
 
     X_test, Y_test = puncher.split_fill_batch(test_images)
