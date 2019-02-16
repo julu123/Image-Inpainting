@@ -9,14 +9,14 @@ from logistic_vector_regression import LogisticVectorRegression
 
 
 def load_image(number):
-    img_dir = '../data/valid_32x32'
+    img_dir = '../data/64x64'
     path = os.path.join(img_dir, f"{number:05d}.png")
     return np.array(ndimage.imread(path, flatten=False)) / 255.0
 
 
 TRAIN_SIZE = 1
 TEST_SIZE = 5
-IMG_SHAPE = (32, 32, 3)
+IMG_SHAPE = (64, 64, 3)
 
 images = []
 for i in range(TRAIN_SIZE):
@@ -32,18 +32,19 @@ with ConvNet() as conv:
              width=IMG_SHAPE[0],
              height=IMG_SHAPE[1],
              training_epochs=200,
-             learning_rate=0.002)
+             learning_rate=0.0001)
 
     test_images = []
-    for i in range(TRAIN_SIZE, TRAIN_SIZE + TEST_SIZE):
+    # for i in range(TRAIN_SIZE, TRAIN_SIZE + TEST_SIZE):
+    for i in range(TRAIN_SIZE):
         test_images.append(load_image(i + 1))
 
-    X_test, Y_test = puncher.split_batch(test_images)
+    X_test, Y_test = puncher.split_fill_batch(test_images)
 
-    for i in range(X_test.shape[0]):
-        x_test = 
+    for i in range(X_test.shape[1]):
+        x_test, y_test = X_test[:, i], Y_test[:, i]
         y_hat = conv.predict(x_test[:, np.newaxis])[:, 0]
-        merged = puncher.merge(x_test, y_hat)
+        merged = puncher.blend(x_test, y_hat)
 
         plt.imshow(merged)
         plt.show()
