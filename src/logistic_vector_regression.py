@@ -40,7 +40,7 @@ class LogisticVectorRegression:
         cost = tf.norm(y - y_hat)
 
         # gradient descent
-        optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost)
+        optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost)
 
         init = tf.global_variables_initializer()
 
