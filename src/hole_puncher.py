@@ -57,10 +57,16 @@ class HolePuncher:
         X = np.zeros((n, m))
 
         for i, img in enumerate(images):
-            self.fill(img)
-            X[:, i] = img.flatten()
+            copied_img = np.copy(img)
+            self.fill(copied_img)
+            X[:, i] = copied_img.flatten()
 
         return X
+
+    def split_fill_batch(self, images):
+        _, Y = self.split_batch(images)
+        X = self.fill_batch(images)
+        return X, Y
 
     def split(self, img):
         """
